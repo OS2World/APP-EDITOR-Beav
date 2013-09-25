@@ -1,0 +1,168 @@
+Deleted file: beav32.def
+
+diff -cb orig/display.c new/display.c
+*** orig/display.c	Fri Apr 16 13:29:36 1993
+--- new/display.c	Mon Jan 01 10:53:30 1996
+***************
+*** 22,35 ****
+  uint fill_buf ();
+  uint get_currow ();
+  uint get_curcol ();
+- #ifndef NOPROTO
+- struct vid;
+- void ucopy (struct vid *vvp, struct vid *pvp);
+- void uline (int row, struct vid *vvp, struct vid *pvp);
+- #else
+  void uline ();
+  void ucopy ();
+- #endif
+  #if MSDOS
+  void mem_line (int row, struct vid *vvp);
+  #endif
+--- 22,29 ----
+diff -cb orig/makefile.os2 new/makefile.os2
+*** orig/makefile.os2	Fri Apr 16 13:29:38 1993
+--- new/makefile.os2	Mon Jan 01 10:51:18 1996
+***************
+*** 1,7 ****
+  # Makefile for BEAV 1.40
+  
+  # OS/2 port done by Kai Uwe Rommel
+! # rommel@jonas.ucrc.sub.org
+  
+  default:
+  	@echo "Make target msc or gcc."
+--- 1,7 ----
+  # Makefile for BEAV 1.40
+  
+  # OS/2 port done by Kai Uwe Rommel
+! # rommel@ars.de
+  
+  default:
+  	@echo "Make target msc or gcc."
+***************
+*** 16,31 ****
+  # emx gcc (32-bit)
+  gcc:
+  	$(MAKE) -f makefile.os2 beav.exe \
+! 	CC="gcc -O -Zomf -Zsys" O=".obj" CFLAGS="" \
+! 	LDFLAGS="-s -o" LIBS="-los2" DEF="beav32.def"
+  
+  OBJ =	basic$O buffer$O cinfo$O display$O ebcdic$O echo$O extend$O file$O \
+  	fileio$O format$O kbd$O line$O main$O random$O region$O search$O \
+  	spawn$O symbol$O tcap$O termcap$O termio$O text$O tty$O ttyio$O \
+! 	ttykbd$O wangpc$O window$O word$O   
+  
+  DEFINES = -DUNIX -DOS2
+  
+  .c$O:
+         	$(CC) $(CFLAGS) $(DEFINES) -c $<
+  
+--- 16,33 ----
+  # emx gcc (32-bit)
+  gcc:
+  	$(MAKE) -f makefile.os2 beav.exe \
+! 	CC="gcc -O -Zomf" O=".obj" CFLAGS="" \
+! 	LDFLAGS="-s -Zsys -Zstack 512 -o" LIBS="" DEF="beav.def"
+  
+  OBJ =	basic$O buffer$O cinfo$O display$O ebcdic$O echo$O extend$O file$O \
+  	fileio$O format$O kbd$O line$O main$O random$O region$O search$O \
+  	spawn$O symbol$O tcap$O termcap$O termio$O text$O tty$O ttyio$O \
+! 	ttykbd$O wangpc$O window$O word$O english$O
+  
+  DEFINES = -DUNIX -DOS2
+  
++ .SUFFIXES: .c $O
++ 
+  .c$O:
+  	$(CC) $(CFLAGS) $(DEFINES) -c $<
+  
+diff -cb orig/prototyp.h new/prototyp.h
+*** orig/prototyp.h	Fri Apr 16 13:29:40 1993
+--- new/prototyp.h	Mon Jan 01 10:54:28 1996
+***************
+*** 1,3 ****
+--- 1,6 ----
++ struct vid;
++ struct SREGS;
++ union REGS;
+  extern char backchar (int f, int n, int k);
+  extern char forwchar (int f, int n, int k);
+  extern char move_ptr (struct WINDOW *wp, long len, char dot, char fix, char rel);
+diff -cb orig/termcap.c new/termcap.c
+*** orig/termcap.c	Fri Apr 16 13:29:48 1993
+--- new/termcap.c	Sun Nov 07 21:59:48 1993
+***************
+*** 117,123 ****
+  
+      if ((cp = getenv("TERMCAP")) != NULL) {
+  	if (*cp != 0) {
+! 	    if (*cp == '/' || *cp == '\\') {
+  		if ((fp = fopen(cp,"r")) != NULL) {
+  		    return(fp);
+  		}
+--- 117,125 ----
+  
+      if ((cp = getenv("TERMCAP")) != NULL) {
+  	if (*cp != 0) {
+! 	    if (*cp == '/' || *cp == '\\' || 
+! 		(isalpha(*cp) && *(cp + 1) == ':' &&
+! 		  (*(cp + 2) == '/' || *(cp + 2) == '\\'))) {
+  		if ((fp = fopen(cp,"r")) != NULL) {
+  		    return(fp);
+  		}
+***************
+*** 131,136 ****
+--- 133,139 ----
+  	    }
+  	}
+      }
++ 
+    {
+      char path[128];
+  
+diff -cb orig/termcap.dat new/termcap.dat
+*** orig/termcap.dat	Fri Apr 16 13:29:48 1993
+--- new/termcap.dat	Wed Nov 16 13:00:52 1994
+***************
+*** 10,15 ****
+--- 10,20 ----
+  	:us=\E[1;31;46m:ue=\E[0;30;46m:\
+  	:mb=\E[5m:md=\E[0;31;46m:\
+          :mr=\E[1;37;46m:me=\E[0;30;46m:\
++ 	:k1=#;:k2=#<:k3=#=:k4=#>:k5=#?:k6=#@:k7=#A:k8=#B:k9=#C:k0=#D:\
++ 	:s1=#T:s2=#U:s3=#V:s4=#W:s5=#X:s6=#Y:s7=#Z:s8=#[:s9=#\\:s0=#]:\
++ 	:c1=#^:c2=#_:c3=#`:c4=#a:c5=#b:c6=#c:c7=#d:c8=#e:c9=#f:c0=#g:\
++ 	:a1=#h:a2=#i:a3=#j:a4=#k:a5=#l:a6=#m:a7=#n:a8=#o:a9=#p:a0=#q:\
++ 	:kd=#P:kh=#G:kH=#O:kI=#R:kl=#K:kN=#Q:kP=#I:kr=#M:ku=#H:\
+  	:aw:
+  #
+  window|ANSI PM window:\
+***************
+*** 18,27 ****
+  	:ho=\E[H:cm=\E[%i%d;%dH:\
+  	:up=\E[A:do=\E[B:le=\E[C:ri=\E[D:nd=\E[C:\
+  	:ti=\E[0;30;47m\E[=7l:te=\E[0;30;47m\E[=7h:\
+! 	:so=\E[0;36;47m:se=\E[0;30;47m:\
+  	:us=\E[0;31;47m:ue=\E[0;30;47m:\
+  	:mb=\E[5m:md=\E[1;37;47m:\
+!         :mr=\E[0;30;46m:me=\E[0;30;47m:\
+  	:aw:
+  #
+  mono|ANSI mono:\
+--- 23,37 ----
+  	:ho=\E[H:cm=\E[%i%d;%dH:\
+  	:up=\E[A:do=\E[B:le=\E[C:ri=\E[D:nd=\E[C:\
+  	:ti=\E[0;30;47m\E[=7l:te=\E[0;30;47m\E[=7h:\
+! 	:so=\E[0;30;46m:se=\E[0;30;47m:\
+  	:us=\E[0;31;47m:ue=\E[0;30;47m:\
+  	:mb=\E[5m:md=\E[1;37;47m:\
+!         :mr=\E[0;36;47m:me=\E[0;30;47m:\
+! 	:k1=#;:k2=#<:k3=#=:k4=#>:k5=#?:k6=#@:k7=#A:k8=#B:k9=#C:k0=#D:\
+! 	:s1=#T:s2=#U:s3=#V:s4=#W:s5=#X:s6=#Y:s7=#Z:s8=#[:s9=#\\:s0=#]:\
+! 	:c1=#^:c2=#_:c3=#`:c4=#a:c5=#b:c6=#c:c7=#d:c8=#e:c9=#f:c0=#g:\
+! 	:a1=#h:a2=#i:a3=#j:a4=#k:a5=#l:a6=#m:a7=#n:a8=#o:a9=#p:a0=#q:\
+! 	:kd=#P:kh=#G:kH=#O:kI=#R:kl=#K:kN=#Q:kP=#I:kr=#M:ku=#H:\
+  	:aw:
+  #
+  mono|ANSI mono:\
