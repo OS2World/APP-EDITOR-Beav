@@ -9,7 +9,9 @@ LICENSE
 
 COMPILE TOOLS
 ===============
-* 
+* C
+* Microsoft C
+* GCC
 
 AUTHORS
 ===============
